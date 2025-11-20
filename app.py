@@ -1,38 +1,31 @@
 from flask import Flask, jsonify
+from engine import MAIN_RANGE, BONUS_RANGE, DAYS_ACTIVE, RUN_HOUR
+import random
 import datetime
-import threading
-import time
-import os
 
 app = Flask(__name__)
 
-# ------------------------------
-#  נקודת בדיקה בסיסית לענן
-# ------------------------------
+# פונקציה ליצירת תחזית חד-פעמית
+def generate_forecast():
+    main_numbers = random.sample(list(MAIN_RANGE), 6)
+    bonus_number = random.choice(list(BONUS_RANGE))
+    main_numbers.sort()
+    return {
+        "main": main_numbers,
+        "bonus": bonus_number
+    }
+
 @app.route("/")
 def home():
+    return jsonify({"status": "NASA_ULTRA_MASTER running"})
+
+@app.route("/run_once")
+def run_once():
+    forecast = generate_forecast()
     return jsonify({
-        "status": "OK",
-        "message": "NASA_ULTRA_MASTER — המערכת בענן פועלת תקין",
-        "time": str(datetime.datetime.now())
+        "forecast": forecast,
+        "timestamp": str(datetime.datetime.now())
     })
 
-# ------------------------------
-#  הפעלה של engine.py
-# ------------------------------
-def run_engine():
-    import engine
-    print("Engine loaded and running...")
-
-# ------------------------------
-#  Thread Autostart
-# ------------------------------
-engine_thread = threading.Thread(target=run_engine)
-engine_thread.daemon = True
-engine_thread.start()
-
-# ------------------------------
-#  הפעלת שרת Flask
-# ------------------------------
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    app.run(host="0.0.0.0", port=10000)
