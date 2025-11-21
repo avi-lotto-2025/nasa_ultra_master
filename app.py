@@ -147,3 +147,24 @@ def before_request():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
+# ----------------------------------------------------
+# שליחה מיידית לבדיקה
+# ----------------------------------------------------
+from flask import request
+
+@app.route("/run-now")
+def run_now():
+    # מייצר תחזית ראשית
+    main = generate_forecast()
+    # מייצר תחזית גיבוי
+    backup = generate_forecast()
+
+    # שולח מייל
+    send_email(main, backup)
+
+    return jsonify({
+        "ok": True,
+        "message": "Forecast sent to email",
+        "main": main,
+        "backup": backup
+    })
