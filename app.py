@@ -79,3 +79,37 @@ def fuse_brains():
         fused.append(score)
 
     return fused
+# ================================================
+# [C] FORECAST ENGINE BLOCK
+# מנוע החיזוי – תחזית ראשית + גיבוי
+# ================================================
+
+def generate_single_forecast():
+    smart_seed()               # יציבות רנדומלית מבוקרת
+    fused_scores = fuse_brains()
+
+    # דירוג מספרים לפי ציון
+    ranked = sorted(
+        list(range(MAIN_MIN, MAIN_MAX + 1)),
+        key=lambda x: fused_scores[x],
+        reverse=True
+    )
+
+    main_prediction = ranked[:MAIN_COUNT]
+    main_prediction.sort()
+
+    extra_prediction = [random.randint(EXTRA_MIN, EXTRA_MAX)]
+
+    return main_prediction, extra_prediction
+
+
+def generate_forecast_pair():
+    main1, extra1 = generate_single_forecast()
+    main2, extra2 = generate_single_forecast()
+
+    return {
+        "main": main1,
+        "extra": extra1,
+        "backup_main": main2,
+        "backup_extra": extra2
+    }
