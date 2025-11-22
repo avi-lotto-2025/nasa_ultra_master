@@ -222,3 +222,26 @@ def main_loop():
             send_email(predictions)
 
         time.sleep(60)
+# ================================================
+# [I] SELF-CHECK SYSTEM BLOCK
+# בדיקות שלמות + תקינות חלקים
+# ================================================
+
+def self_check():
+    ok = True
+
+    # בדיקת מפתח
+    if not SENDGRID_API_KEY:
+        print(LOG_PREFIX, "SELF CHECK ERROR: Missing API Key")
+        ok = False
+
+    # בדיקת חיזוי
+    try:
+        test = generate_forecast_pair()
+        if not test["main"]:
+            ok = False
+    except Exception as e:
+        print(LOG_PREFIX, "SELF CHECK ERROR (forecast):", e)
+        ok = False
+
+    return ok
