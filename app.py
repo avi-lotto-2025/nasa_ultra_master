@@ -191,3 +191,9 @@ def run_now():
         "backup_main": predictions["backup_main"],
         "backup_extra": predictions["backup_extra"]
     })
+# ================================================
+# [F] HEARTBEAT BLOCK
+# ================================================
+
+def heartbeat():
+    print(LOG_PREFIX, "HEARTBEAT – SYSTEM ALIVE")
