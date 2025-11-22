@@ -5,116 +5,89 @@ from flask import Flask, jsonify
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
-# --------------------------------------------------------
+# -----------------------------------------------------
 # הגדרות מערכת
-# --------------------------------------------------------
+# -----------------------------------------------------
 
 SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
 TARGET_EMAIL = "avi5588@gmail.com"
 
-# שלישי (2), חמישי (4), שבת (6)
+# ימים פעילים: שלישי (2), חמישי (4), שבת (6)
 DAYS_ACTIVE = [2, 4, 6]
 
-# 20:00
+# שעה להרצה: 20:00
 RUN_HOUR = 20
 
-MAIN_RANGE = list(range(1, 38))    # 1–37
+# טווחי מספרים ללוטו
+MAIN_RANGE = list(range(1, 38))   # 1–37
 BONUS_RANGE = list(range(1, 8))    # 1–7
 
 app = Flask(__name__)
 
-# --------------------------------------------------------
-# יצירת תחזית
-# --------------------------------------------------------
-
+# -----------------------------------------------------
+# פונקציה – יצירת תחזית (1+1 בלבד)
+# -----------------------------------------------------
 def generate_forecast():
     main_numbers = sorted(random.sample(MAIN_RANGE, 6))
     bonus_number = random.choice(BONUS_RANGE)
 
-    return {
-        "main": main_numbers,
-        "bonus": bonus_number
-    }
+    backup_main = sorted(random.sample(MAIN_RANGE, 6))
+    backup_bonus = random.choice(BONUS_RANGE)
 
-# --------------------------------------------------------
-# שליחת מייל
-# --------------------------------------------------------
+    main_prediction = f"{main_numbers} + {bonus_number}"
+    backup_prediction = f"{backup_main} + {backup_bonus}"
 
-def send_email(main, backup):
-    subject = "תחזית לוטו — NASA ULTRA MASTER"
-    body = f"""
-    תחזית ראשית:
-    {main['main']}  |  בונוס: {main['bonus']}
+    return main_prediction, backup_prediction
 
-    תחזית גיבוי:
-    {backup['main']}  |  בונוס: {backup['bonus']}
-    """
-
-    message = Mail(
-        from_email="noreply@nasa-ultra-master.com",
-        to_emails=TARGET_EMAIL,
-        subject=subject,
-        plain_text_content=body
-    )
-
+# -----------------------------------------------------
+# פונקציה – שליחת מייל (חדש, נקי, 1+1)
+# -----------------------------------------------------
+def send_email(main_prediction, backup_prediction):
     try:
-        sg = SendGridAPIClient(SENDGRID_API_KEY)
-        sg.send(message)
+        sg = SendGridAPIClient(api_key=SENDGRID_API_KEY)
+
+        subject = "תחזית לוטו - NASA_ULTRA (ראשית + גיבוי)"
+        body = (
+            f"🟦 תחזית ראשית:\n{main_prediction}\n\n"
+            f"🟩 תחזית גיבוי:\n{backup_prediction}\n\n"
+            "— נשלח אוטומטית ע״י NASA_ULTRA_V19_FINAL_SELF_AWARENESS —"
+        )
+
+        message = Mail(
+            from_email=TARGET_EMAIL,
+            to_emails=TARGET_EMAIL,
+            subject=subject,
+            plain_text_content=body,
+        )
+
+        response = sg.send(message)
+        print(f"[EMAIL] נשלח בהצלחה. סטטוס: {response.status_code}")
+
     except Exception as e:
-        print("MAIL ERROR:", e)
+        print("[EMAIL ERROR] שגיאה בשליחה:", str(e))
 
-# --------------------------------------------------------
-# עמוד בית
-# --------------------------------------------------------
-
+# -----------------------------------------------------
+# פונקציה – דף בית
+# -----------------------------------------------------
 @app.route("/")
 def home():
-    return jsonify({"status": "OK", "message": "NASA_ULTRA_MASTER READY"})
+    return jsonify({"status": "NASA_ULTRA ONLINE"})
 
-# --------------------------------------------------------
-# מסלול הרצה אוטומטי רגיל (לא שולח מייל)
-# --------------------------------------------------------
-
-@app.route("/run")
+# -----------------------------------------------------
+# פונקציה – הרצה אוטומטית (Heartbeat)
+# -----------------------------------------------------
 def run_auto():
     now = datetime.datetime.now()
-    weekday = now.isoweekday()
-    hour = now.hour
+    if now.weekday() in DAYS_ACTIVE and now.hour == RUN_HOUR:
+        main_prediction, backup_prediction = generate_forecast()
+        send_email(main_prediction, backup_prediction)
 
-    if weekday in DAYS_ACTIVE and hour == RUN_HOUR:
-        forecast = generate_forecast()
-        backup = generate_forecast()
-
-        return jsonify({
-            "ok": True,
-            "main": forecast,
-            "backup": backup,
-            "timestamp": str(now)
-        })
-
-    return jsonify({
-        "ok": False,
-        "message": "לא הזמן הנכון להרצה",
-        "weekday": weekday,
-        "hour": hour
-    })
-
-# --------------------------------------------------------
-# מסלול ידני לבדיקות — שולח מייל בלבד
-# --------------------------------------------------------
-
-@app.route("/run_now", methods=["GET"])
-def run_now():
-    main = generate_forecast()
-    backup = generate_forecast()
-
-    send_email(main, backup)
-
-    return "EMAIL_SENT"
-
-# --------------------------------------------------------
-# הפעלה
-# --------------------------------------------------------
-
+# -----------------------------------------------------
+# התחלת שרת Flask (Render מריץ דרך gunicorn app:app)
+# -----------------------------------------------------
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    # הפעלה מקומית
+    print("Running NASA_ULTRA locally...")
+    main_prediction, backup_prediction = generate_forecast()
+    send_email(main_prediction, backup_prediction)
+    app.run(host="0.0.0.0", port=5000)
