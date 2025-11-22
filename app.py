@@ -209,3 +209,16 @@ def scheduler_should_run():
         now.hour == SCHEDULE_HOUR and
         now.minute == 0
     )
+# ================================================
+# [H] MAIN EXECUTION BLOCK
+# ================================================
+
+def main_loop():
+    while True:
+        heartbeat()
+
+        if scheduler_should_run():
+            predictions = generate_forecast_pair()
+            send_email(predictions)
+
+        time.sleep(60)
