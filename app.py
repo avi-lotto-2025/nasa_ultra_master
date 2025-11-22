@@ -197,3 +197,15 @@ def run_now():
 
 def heartbeat():
     print(LOG_PREFIX, "HEARTBEAT – SYSTEM ALIVE")
+# ================================================
+# [G] AUTO-SCHEDULER BLOCK
+# שלישי, חמישי, מוצ״ש – 20:00
+# ================================================
+
+def scheduler_should_run():
+    now = datetime.datetime.now()
+    return (
+        now.weekday() in SCHEDULE_DAYS and
+        now.hour == SCHEDULE_HOUR and
+        now.minute == 0
+    )
