@@ -113,3 +113,57 @@ def generate_forecast_pair():
         "backup_main": main2,
         "backup_extra": extra2
     }
+# ================================================
+# [D] EMAIL ENGINE BLOCK
+# שליחת מייל → תחזית ראשית + גיבוי
+# ================================================
+
+import urllib.request
+import json
+
+def send_email(predictions):
+    if not SENDGRID_API_KEY:
+        print(LOG_PREFIX, "ERROR: Missing SENDGRID_API_KEY")
+        return False
+
+    url = "https://api.sendgrid.com/v3/mail/send"
+
+    main = predictions["main"]
+    extra = predictions["extra"]
+    backup_main = predictions["backup_main"]
+    backup_extra = predictions["backup_extra"]
+
+    body = {
+        "personalizations": [{
+            "to": [{"email": "avi5588@gmail.com"}],
+            "subject": "NASA_ULTRA – תחזית לוטו"
+        }],
+        "from": {"email": "noreply@nasa-ultra.system"},
+        "content": [{
+            "type": "text/plain",
+            "value":
+f"""
+תחזית ראשית:
+{main} + {extra}
+
+תחזית גיבוי:
+{backup_main} + {backup_extra}
+
+NASA_ULTRA_MASTER_FULL
+"""
+        }]
+    }
+
+    data = json.dumps(body).encode("utf-8")
+
+    req = urllib.request.Request(url, data=data)
+    req.add_header("Authorization", f"Bearer {SENDGRID_API_KEY}")
+    req.add_header("Content-Type", "application/json")
+
+    try:
+        with urllib.request.urlopen(req) as r:
+            print(LOG_PREFIX, "EMAIL SENT", r.status)
+            return True
+    except Exception as e:
+        print(LOG_PREFIX, "EMAIL ERROR:", e)
+        return False
