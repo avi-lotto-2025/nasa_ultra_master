@@ -260,13 +260,3 @@ def auto_recovery():
         print(LOG_PREFIX, "AUTO RECOVERY – OK")
     except:
         print(LOG_PREFIX, "AUTO RECOVERY FAILED")
-# ================================================
-# [K] SELF-HEALING & AUTO-REBUILD BLOCK
-# שחזור מודולים, חידוש שכבות
-# ================================================
-
-def self_healing_cycle():
-    if not self_check():
-        auto_recovery()
-        smart_seed()
-        print(LOG_PREFIX, "SELF HEALING COMPLETE")
