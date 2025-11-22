@@ -167,3 +167,27 @@ NASA_ULTRA_MASTER_FULL
     except Exception as e:
         print(LOG_PREFIX, "EMAIL ERROR:", e)
         return False
+# ================================================
+# [E] FLASK ROUTES BLOCK
+# API: /  +  /run_now
+# ================================================
+
+from flask import Flask, jsonify
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return jsonify({"status": "NASA_ULTRA ONLINE"})
+
+@app.route("/run_now")
+def run_now():
+    predictions = generate_forecast_pair()
+    send_email(predictions)
+    return jsonify({
+        "status": "email_sent",
+        "main": predictions["main"],
+        "extra": predictions["extra"],
+        "backup_main": predictions["backup_main"],
+        "backup_extra": predictions["backup_extra"]
+    })
