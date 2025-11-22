@@ -245,20 +245,7 @@ def self_check():
         ok = False
 
     return ok
-# ================================================
-# [J] AUTO-RECOVERY BLOCK
-# תיקון עצמי
-# ================================================
 
-def auto_recovery():
-    print(LOG_PREFIX, "AUTO RECOVERY – starting")
-
-    try:
-        smart_seed()
-        _ = generate_forecast_pair()
-        print(LOG_PREFIX, "AUTO RECOVERY – OK")
-    except:
-        print(LOG_PREFIX, "AUTO RECOVERY FAILED")
 # ================================================
 # [J] AUTO-RECOVERY BLOCK
 # תיקון עצמי
