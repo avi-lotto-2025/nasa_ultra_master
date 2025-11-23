@@ -1,4 +1,5 @@
 flask
 gunicorn
-sendgrid
 requests
+sendgrid
+numpy
