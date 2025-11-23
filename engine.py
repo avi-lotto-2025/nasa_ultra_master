@@ -1,22 +1,35 @@
-# ====================================================
-# NASA_ULTRA_MASTER – ENGINE LAYER
-# ====================================================
-
-import numpy as np
 import random
 
-def generate_forecast_pair():
+# ============================================================
+# ENGINE – BASIC FORECAST ENGINE (VERSION B)
+# שלב בסיסי יציב – לפני הכנסת המוח המלא
+# ============================================================
+
+def generate_basic_forecast():
     """
-    הפונקציה שמייצרת תחזית לוטו.
-    כאן אתה יכול לשלב את כל החוקים, המשקלים, השכבות,
-    Monte Carlo וכל מה שהיה במערכת המתקדמת.
-    כרגע — גרסה מינימלית, יציבה ומתפקדת מלאה.
+    שלב בסיסי: יוצר תחזית זמנית בלבד.
+    בשכבות הבאות נוסיף:
+    - משקלים
+    - הסתברויות
+    - נתוני עבר
+    - Monte Carlo
+    - שכבות מוח
+    - 5 גיבויים
     """
 
-    main_balls = sorted(random.sample(range(1, 38), 6))    # 6 מספרים
-    extra_ball = random.randint(1, 7)                      # מספר נוסף
+    main = sorted(random.sample(range(1, 38), 6))
+    extra = random.randint(1, 7)
 
     return {
-        "main": main_balls,
-        "extra": extra_ball
+        "main": main,
+        "extra": extra
     }
+
+
+# ============================================================
+# TEST FUNCTION
+# ============================================================
+
+def engine_status():
+    return "ENGINE_BASIC_OK"
+
