@@ -158,3 +158,36 @@ def select_final_set(fused_layer):
         "main": final_main,
         "extra": extra
     }
+# ===============================================
+# NASA ULTRA ENGINE – PART 6
+# Backup Sets Layer (5 גיבויים)
+# ===============================================
+
+def generate_backup_sets(fused_layer, count=5):
+    """
+    יוצר 5 סטי גיבוי חכמים.
+    כל סט נבנה על בסיס אותה שכבת הסתברות,
+    אך עם שינויי משקל וערבוב קל ליצירת שונות.
+    """
+
+    backups = []
+
+    for _ in range(count):
+        # ערבוב משקלים קל ליצירת גיוון
+        adjusted = {n: fused_layer[n] + random.uniform(0, 0.2) for n in fused_layer}
+
+        # מיון לפי ערכים גבוהים
+        sorted_nums = sorted(adjusted.items(), key=lambda x: x[1], reverse=True)
+
+        # בחירת 6 המספרים המובילים
+        main_set = sorted([num for num, val in sorted_nums[:6]])
+
+        # בחירת אקסטרה
+        extra_set = random.choice(list(EXTRA_RANGE))
+
+        backups.append({
+            "main": main_set,
+            "extra": extra_set
+        })
+
+    return backups
