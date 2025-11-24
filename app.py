@@ -74,3 +74,32 @@ def send_test():
 if __name__ == "__main__":
     # Render משתמש ב־gunicorn, אבל זה שימושי להרצה מקומית.
     app.run(host="0.0.0.0", port=10000)
+# ==========================================
+# NASA ULTRA – APP LAYER
+# שכבת API עליונה
+# ==========================================
+
+from flask import Flask, jsonify
+from engine import run_lotto_engine
+
+app = Flask(__name__)
+
+# בדיקת חיים
+@app.route("/")
+def home():
+    return jsonify({"status": "NASA_ULTRA ONLINE"})
+
+# תחזית מלאה (Main + Backups)
+@app.route("/forecast")
+def forecast():
+    result = run_lotto_engine()
+    return jsonify(result)
+
+# סטטוס שרת
+@app.route("/status")
+def status():
+    return jsonify({"engine": "OK", "version": "ULTRA_FULL"})
+
+# להרצה מקומית בלבד
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)
