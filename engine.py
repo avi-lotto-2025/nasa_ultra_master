@@ -270,3 +270,61 @@ def compute_weights(history):
                 weight_main[sorted_nums[i + 1]] += 0.4
 
     return weight_main, weight_extra
+# ===============================================================
+# PART 5 — MONTE CARLO LAYER (שכבת מונטה-קרלו)
+# ===============================================================
+
+def monte_carlo_predict(history, runs=MC_RUNS):
+    """
+    מריץ אלפי סימולציות לפי המשקלים שחושבו.
+    בכל ריצה המערכת בוחרת 6 מספרים לפי משקל ודפוסים.
+    לבסוף – בונה תחזית סופית מתוך כל ההרצות.
+    """
+
+    weight_main, weight_extra = compute_weights(history)
+
+    results_main = []
+    results_extra = []
+
+    for _ in range(runs):
+
+        # בחירה של מספר עיקרי לפי משקל (weighted choice)
+        main_nums = random.choices(
+            population=list(weight_main.keys()),
+            weights=list(weight_main.values()),
+            k=6
+        )
+
+        # מניעת כפילויות
+        main_nums = sorted(list(set(main_nums)))
+        while len(main_nums) < 6:
+            add_num = random.choices(
+                population=list(weight_main.keys()),
+                weights=list(weight_main.values()),
+                k=1
+            )[0]
+            if add_num not in main_nums:
+                main_nums.append(add_num)
+        main_nums = sorted(main_nums)
+
+        # בחירת מספר אקסטרה
+        extra_num = random.choices(
+            population=list(weight_extra.keys()),
+            weights=list(weight_extra.values()),
+            k=1
+        )[0]
+
+        results_main.append(tuple(main_nums))
+        results_extra.append(extra_num)
+
+    # —————————————————————————
+    # בניית תחזית סופית לפי הופעות
+    # —————————————————————————
+
+    best_main = statistics.mode(results_main)
+    best_extra = statistics.mode(results_extra)
+
+    return {
+        "main": list(best_main),
+        "extra": best_extra
+    }
