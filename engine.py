@@ -328,3 +328,19 @@ def monte_carlo_predict(history, runs=MC_RUNS):
         "main": list(best_main),
         "extra": best_extra
     }
+# ===============================================================
+# PART 6 — FINAL FORECAST WRAPPER
+# ===============================================================
+
+def generate_forecast():
+    """
+    עטיפה סופית שמריצה את כל המנוע:
+    טעינת היסטוריה → Monte Carlo → תחזית
+    """
+    history = load_history()
+    forecast = monte_carlo_predict(history)
+
+    return {
+        "status": "READY",
+        "forecast": forecast
+    }
