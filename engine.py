@@ -59,3 +59,38 @@ def compute_weight_layer(history):
         weight_map[k] = weight_map[k] / max_val
 
     return weight_map
+# ===============================================
+# NASA ULTRA ENGINE – PART 3
+# Monte Carlo Simulation Layer
+# ===============================================
+
+def monte_carlo_simulation(weights, simulations=MC_RUNS):
+    results = []
+
+    all_numbers = list(MAIN_RANGE)
+    weight_list = [weights[n] for n in all_numbers]
+
+    for _ in range(simulations):
+        chosen = random.choices(
+            population=all_numbers,
+            weights=weight_list,
+            k=6
+        )
+        chosen = sorted(list(set(chosen)))
+        while len(chosen) < 6:
+            extra_choice = random.choices(
+                population=all_numbers,
+                weights=weight_list,
+                k=1
+            )[0]
+            if extra_choice not in chosen:
+                chosen.append(extra_choice)
+        chosen = sorted(chosen)
+        results.append(tuple(chosen))
+
+    freq = {}
+    for r in results:
+        freq[r] = freq.get(r, 0) + 1
+
+    best = max(freq, key=freq.get)
+    return list(best)
