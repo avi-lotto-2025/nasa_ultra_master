@@ -1,12 +1,15 @@
-# ==========================================================
+# =========================================================
 # NASA ULTRA – APP LAYER
-# API ראשי
-# ==========================================================
+# =========================================================
 
 from flask import Flask, jsonify
-from engine import generate_forecast
+from engine import generate_forecast, MAIN_RANGE, EXTRA_RANGE, HISTORY_SIZE
 
 app = Flask(__name__)
+
+# Dummy history until we connect real lotto data
+main_history = []
+extra_history = []
 
 @app.route("/")
 def home():
@@ -14,11 +17,14 @@ def home():
 
 @app.route("/status")
 def status():
-    return jsonify({"engine": "OK", "version": "ULTRA_FULL"})
+    return jsonify({
+        "engine": "OK",
+        "version": "ULTRA_FULL"
+    })
 
 @app.route("/forecast")
 def forecast():
-    result = generate_forecast()
+    result = generate_forecast(main_history, extra_history)
     return jsonify(result)
 
 if __name__ == "__main__":
