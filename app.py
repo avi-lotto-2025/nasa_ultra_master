@@ -1,28 +1,58 @@
-# ===============================================
-# NASA ULTRA – APP LAYER (FINAL CLEAN VERSION)
-# ===============================================
-
-from flask import Flask, jsonify
+import os
+import json
+import requests
 from engine import generate_forecast
+from datetime import datetime
 
-app = Flask(__name__)
+SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
+FROM_EMAIL = "avi5588@gmail.com"
+TO_EMAIL = "avi5588@gmail.com"
 
-@app.route("/")
-def home():
-    return jsonify({"status": "NASA_ULTRA ONLINE"})
+def format_forecast_set(title, forecast):
+    main = ", ".join(str(n) for n in forecast["main"])
+    extra = forecast["extra"]
+    return f"{title}:\nמספרים: {main}\nהמספר הנוסף: {extra}\n"
 
-@app.route("/status")
-def status():
-    return jsonify({
-        "engine": "OK",
-        "version": "ULTRA_FULL",
-        "service": "RUNNING"
-    })
+def send_email_with_two_sets():
+    # יוצרים תחזית ראשית
+    main_forecast = generate_forecast()
 
-@app.route("/forecast")
-def forecast():
-    result = generate_forecast()
-    return jsonify(result)
+    # יוצרים תחזית גיבוי אחת בלבד
+    backup_forecast = generate_forecast()
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    # בונים טקסט מייל
+    main_txt = format_forecast_set("🟦 תחזית ראשית", main_forecast)
+    backup_txt = format_forecast_set("🟨 תחזית גיבוי", backup_forecast)
+
+    final_text = (
+        "NASA_ULTRA_MASTER – התחזיות שלך:\n\n"
+        + main_txt + "\n"
+        + backup_txt + "\n"
+        + f"\nנשלח ב־{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+    )
+
+    # בניית Payload ל־SendGrid
+    message = {
+        "personalizations": [
+            {"to": [{"email": TO_EMAIL}]}
+        ],
+        "from": {"email": FROM_EMAIL},
+        "subject": "תחזית לוטו – NASA_ULTRA_MASTER",
+        "content": [{"type": "text/plain", "value": final_text}]
+    }
+
+    # שליחה
+    response = requests.post(
+        "https://api.sendgrid.com/v3/mail/send",
+        headers={
+            "Authorization": f"Bearer {SENDGRID_API_KEY}",
+            "Content-Type": "application/json"
+        },
+        data=json.dumps(message)
+    )
+
+    return {
+        "status": response.status_code,
+        "body": final_text,
+        "sendgrid_response": response.text
+    }
