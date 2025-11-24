@@ -1,5 +1,5 @@
 # ================================================
-# NASA_ULTRA_MASTER – APP LAYER (FULL CLEAN FILE)
+# NASA_ULTRA_MASTER – FINAL APP (KEEP-ALIVE + HEARTBEAT)
 # ================================================
 
 import os
@@ -16,59 +16,56 @@ from engine import generate_forecast
 # ================================================
 app = Flask(__name__)
 
-# Route ראשי – חובה כדי ש-Render ישאיר את השרת חי
+# Route ראשי – חובה להשאיר את השירות חי
 @app.route("/")
 def home():
-    return "NASA_ULTRA_MASTER is running"
-
+    return "NASA_ULTRA_MASTER is running (FINAL VERSION)"
 
 # ================================================
-# HEARTBEAT – AUTO RUN 24/7 בענן (ללא מיילים)
+# ROUTES לקבלת תחזיות
+# ================================================
+@app.route("/forecast", methods=["GET"])
+def forecast_route():
+    return generate_forecast(), 200
+
+@app.route("/forecast/send", methods=["GET"])
+def forecast_send_route():
+    return {
+        "status": "ok",
+        "main": generate_forecast(),
+        "backup": generate_forecast(),
+        "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }, 200
+
+# ================================================
+# HEARTBEAT – ריצה אוטומטית בשלישי/חמישי/מוצאי־שבת
 # ================================================
 def heartbeat_loop():
     while True:
         now = datetime.datetime.now()
-
-        # ימים שלישי, חמישי, מוצ״ש  (Tue=1, Thu=3, Sat=5)
         if now.weekday() in [1, 3, 5] and now.hour == 20 and now.minute == 0:
             forecast = generate_forecast()
+            print("====== HEARTBEAT ======")
+            print("Time:", now)
+            print("Forecast:", forecast)
+            print("=======================")
+            time.sleep(60)
+        time.sleep(10)
 
-            print("==============================================")
-            print("🚀 HEARTBEAT – תחזית אוטומטית")
-            print("יום:", now.strftime("%A"))
-            print("שעה:", now.strftime("%H:%M"))
-            print("תחזית:", forecast)
-            print("==============================================")
+# ================================================
+# KEEP ALIVE – פינג פנימי שמחזיק את Render ער
+# ================================================
+def keep_alive_loop():
+    while True:
+        try:
+            # קריאת פינג לעצמי — Render רואה "תנועה" ולא מכבה
+            requests.get("http://localhost:10000/")
+        except:
+            pass
+        time.sleep(15)   # כל 15 שניות תנועה פנימית
 
-            time.sleep(60)   # למנוע כפילות של אותה דקה
-
-        time.sleep(30)  # בדיקה כל 30 שניות
-
-
-# מפעיל את ה-HEARTBEAT ברקע
+# Thread הפעלת HEARTBEAT
 threading.Thread(target=heartbeat_loop, daemon=True).start()
 
-
-# ================================================
-# ROUTES
-# ================================================
-
-# מחזיר תחזית רגילה
-@app.route("/forecast", methods=["GET"])
-def forecast_route():
-    result = generate_forecast()
-    return result, 200
-
-
-# מחזיר תחזית ראשית+גיבוי (ללא מייל כרגע)
-@app.route("/forecast/send", methods=["GET"])
-def forecast_send():
-    main_forecast = generate_forecast()
-    backup_forecast = generate_forecast()
-
-    return {
-        "status": "ok",
-        "main": main_forecast,
-        "backup": backup_forecast,
-        "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    }, 200
+# Thread הפעלת KEEP-ALIVE
+threading.Thread(target=keep_alive_loop, daemon=True).start()
