@@ -125,3 +125,36 @@ def fuse_probability_layers(weight_layer, monte_result):
         fused[k] = fused[k] / max_v
 
     return fused
+# ===============================================
+# NASA ULTRA ENGINE – PART 5
+# Final Selection Layer
+# בחירת הסט הראשי (FINAL)
+# ===============================================
+
+def select_final_set(fused_layer):
+    """
+    מקבל שכבה היברידית (fused) ומחזיר סט ראשי חכם.
+    הבחירה מבוססת על:
+    - ניקוד משולב
+    - בחירה אוטומטית של המספרים הגבוהים ביותר
+    """
+
+    # הפיכת המפה לרשימה מסודרת לפי ערך גבוה → נמוך
+    sorted_nums = sorted(
+        fused_layer.items(),
+        key=lambda x: x[1],
+        reverse=True
+    )
+
+    # בחירת 6 המספרים החזקים ביותר
+    final_main = [num for num, score in sorted_nums[:6]]
+    final_main = sorted(final_main)
+
+    # בחירת מספר נוסף (extra) לפי משקלים / בחירה אקראית חכמה
+    extra_candidates = list(EXTRA_RANGE)
+    extra = random.choice(extra_candidates)
+
+    return {
+        "main": final_main,
+        "extra": extra
+    }
