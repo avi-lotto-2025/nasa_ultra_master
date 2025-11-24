@@ -56,3 +56,11 @@ def send_email_with_two_sets():
         "body": final_text,
         "sendgrid_response": response.text
     }
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route("/forecast/send", methods=["GET"])
+def send_forecast_email():
+    result = send_email_with_two_sets()
+    return result, 200
