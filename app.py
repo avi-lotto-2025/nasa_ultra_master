@@ -5,72 +5,70 @@
 import os
 import json
 import requests
+import threading
+import time
+import datetime
 from flask import Flask
 from engine import generate_forecast
-from datetime import datetime
 
-# Flask
+# ================================================
+# FLASK APP
+# ================================================
 app = Flask(__name__)
 
-# ====== ROUTE ראשי להשאיר את המערכת חיה ב-Render ======
+# Route ראשי – חובה כדי ש-Render ישאיר את השרת חי
 @app.route("/")
 def home():
     return "NASA_ULTRA_MASTER is running"
 
-# ================================================
-# FORMAT HELPERS
-# ================================================
-def format_forecast_set(title, forecast):
-    main = ", ".join(str(n) for n in forecast["main"])
-    extra = forecast["extra"]
-    return f"{title}:\nמספרים: {main}\nהמספר הנוסף: {extra}\n"
 
 # ================================================
-# SENDGRID CONFIG
+# HEARTBEAT – AUTO RUN 24/7 בענן (ללא מיילים)
 # ================================================
-SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
-FROM_EMAIL = "avi5588@gmail.com"
-TO_EMAIL = "avi5588@gmail.com"
+def heartbeat_loop():
+    while True:
+        now = datetime.datetime.now()
+
+        # ימים שלישי, חמישי, מוצ״ש  (Tue=1, Thu=3, Sat=5)
+        if now.weekday() in [1, 3, 5] and now.hour == 20 and now.minute == 0:
+            forecast = generate_forecast()
+
+            print("==============================================")
+            print("🚀 HEARTBEAT – תחזית אוטומטית")
+            print("יום:", now.strftime("%A"))
+            print("שעה:", now.strftime("%H:%M"))
+            print("תחזית:", forecast)
+            print("==============================================")
+
+            time.sleep(60)   # למנוע כפילות של אותה דקה
+
+        time.sleep(30)  # בדיקה כל 30 שניות
+
+
+# מפעיל את ה-HEARTBEAT ברקע
+threading.Thread(target=heartbeat_loop, daemon=True).start()
+
 
 # ================================================
-# MAIN + BACKUP FORECAST (לא שולחים כרגע מייל)
+# ROUTES
 # ================================================
-def send_email_with_two_sets():
-    # תחזית ראשית
-    main_forecast = generate_forecast()
 
-    # תחזית גיבוי אחת
-    backup_forecast = generate_forecast()
-
-    # בניית טקסט
-    main_txt = format_forecast_set("🟦 תחזית ראשית", main_forecast)
-    backup_txt = format_forecast_set("🟨 תחזית גיבוי", backup_forecast)
-
-    final_text = (
-        "NASA_ULTRA_MASTER – התחזיות שלך:\n\n"
-        + main_txt + "\n"
-        + backup_txt + "\n"
-        + f"\nנשלח ב־{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-    )
-
-    # לא שולחים מייל כרגע — רק מחזירים תוצאה
-    return {
-        "status": "ok (no email sent)",
-        "body": final_text
-    }
-
-# ================================================
-# ROUTE לשליחת תחזית (כרגע רק מחזיר טקסט)
-# ================================================
-@app.route("/forecast/send", methods=["GET"])
-def send_forecast_email():
-    result = send_email_with_two_sets()
-    return result, 200
-
-# ================================================
-# ROUTE לקבלת תחזית רגילה
-# ================================================
+# מחזיר תחזית רגילה
 @app.route("/forecast", methods=["GET"])
-def forecast_only():
+def forecast_route():
     result = generate_forecast()
     return result, 200
+
+
+# מחזיר תחזית ראשית+גיבוי (ללא מייל כרגע)
+@app.route("/forecast/send", methods=["GET"])
+def forecast_send():
+    main_forecast = generate_forecast()
+    backup_forecast = generate_forecast()
+
+    return {
+        "status": "ok",
+        "main": main_forecast,
+        "backup": backup_forecast,
+        "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }, 200
