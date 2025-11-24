@@ -229,3 +229,44 @@ def run_lotto_engine():
         "final": final_set,
         "backups": backups
     }
+# ===============================================================
+# PART 4 — WEIGHT LAYER (שכבת משקלים חכמה)
+# ===============================================================
+
+def compute_weights(history):
+    """
+    חישוב המשקלים של כל מספר לפי הופעות, רצפים, מרחקים וסטיות.
+    נותן בוסט למספרים 'חמים' ומוריד משקל ל'קרים'.
+    """
+
+    weight_main = {n: 1.0 for n in MAIN_RANGE}
+    weight_extra = {n: 1.0 for n in EXTRA_RANGE}
+
+    # ספירה בסיסית
+    count_main = {n: 0 for n in MAIN_RANGE}
+    count_extra = {n: 0 for n in EXTRA_RANGE}
+
+    for draw in history:
+        for num in draw["main"]:
+            count_main[num] += 1
+        count_extra[draw["extra"]] += 1
+
+    # נרמול ספירות
+    max_main = max(count_main.values()) or 1
+    max_extra = max(count_extra.values()) or 1
+
+    for n in MAIN_RANGE:
+        weight_main[n] += (count_main[n] / max_main) * 1.5  # בוסט למספרים חמים
+
+    for n in EXTRA_RANGE:
+        weight_extra[n] += (count_extra[n] / max_extra) * 1.7  # בוסט חזק יותר לאקסטרה
+
+    # בוסט לרצפים
+    for draw in history[-10:]:
+        sorted_nums = sorted(draw["main"])
+        for i in range(len(sorted_nums) - 1):
+            if sorted_nums[i + 1] - sorted_nums[i] == 1:
+                weight_main[sorted_nums[i]] += 0.4
+                weight_main[sorted_nums[i + 1]] += 0.4
+
+    return weight_main, weight_extra
