@@ -191,3 +191,41 @@ def generate_backup_sets(fused_layer, count=5):
         })
 
     return backups
+# ===============================================
+# NASA ULTRA ENGINE – PART 7
+# Main Brain Function (הפעלה מלאה של כל המנוע)
+# ===============================================
+
+def run_lotto_engine():
+    """
+    מפעיל את כל שכבות המוח לפי הסדר:
+    1. טעינת היסטוריה
+    2. שכבת משקלים
+    3. מונטה-קרלו
+    4. שכבת היתוך הסתברותי
+    5. סט ראשי
+    6. 5 גיבויים
+    """
+
+    # 1. טעינת היסטוריה
+    history = load_history()
+
+    # 2. בניית שכבת משקלים מההיסטוריה
+    weight_layer = compute_weight_layer(history)
+
+    # 3. מונטה קרלו
+    monte_result = monte_carlo_simulation(weight_layer)
+
+    # 4. שכבת היתוך
+    fused_layer = fuse_probability_layers(weight_layer, monte_result)
+
+    # 5. יצירת סט ראשי
+    final_set = select_final_set(fused_layer)
+
+    # 6. יצירת גיבויים
+    backups = generate_backup_sets(fused_layer, count=5)
+
+    return {
+        "final": final_set,
+        "backups": backups
+    }
