@@ -94,3 +94,34 @@ def monte_carlo_simulation(weights, simulations=MC_RUNS):
 
     best = max(freq, key=freq.get)
     return list(best)
+# ===============================================
+# NASA ULTRA ENGINE – PART 4
+# Hybrid Probability Fusion Layer
+# שילוב משקלים + מונטה קרלו + שכיחות בסיסית
+# ===============================================
+
+def fuse_probability_layers(weight_layer, monte_result):
+    """
+    משלב בין:
+    1. משקלי שכיחות (weight_layer)
+    2. תוצאות מונטה קרלו (monte_result)
+    כדי ליצור שכבת הסתברות היברידית חזקה יותר.
+    """
+
+    fused = {}
+
+    # משקל בסיסי
+    for n in MAIN_RANGE:
+        fused[n] = weight_layer.get(n, 0) * 0.6
+
+    # חיזוק לפי בחירות מונטה קרלו
+    for n in monte_result:
+        if n in fused:
+            fused[n] += 0.4
+
+    # Normalize
+    max_v = max(fused.values()) if max(fused.values()) > 0 else 1
+    for k in fused:
+        fused[k] = fused[k] / max_v
+
+    return fused
