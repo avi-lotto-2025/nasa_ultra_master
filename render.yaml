@@ -1,8 +1,6 @@
 services:
-  - type: web
-    name: nasa_ultra_master_service
+  - name: nasa_ultra_master_service
     env: python
-    region: frankfurt
-    plan: free
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn app:app"
+    startCommand: gunicorn app:app --bind 0.0.0.0:10000 --timeout 120
+    buildCommand: pip install -r requirements.txt
+    rootDir: ./
