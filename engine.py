@@ -1,84 +1,66 @@
-# ===============================================
-# NASA ULTRA ENGINE – FULL ENGINE
-# כל הלוגיקה של תחזיות הלוטו
-# ===============================================
-
 import random
 import statistics
-import numpy as np
+from datetime import datetime
 
-# טווחי מספרים
-MAIN_RANGE = range(1, 38)     # 1–37
-EXTRA_RANGE = range(1, 8)     # 1–7
+# -----------------------------
+# 1. היסטוריה ראשונית (נכניס REAL DATA בשלב הבא)
+# -----------------------------
+HIST = [
+    [1, 3, 8, 23, 26, 34, 5],
+    [1, 3, 11, 25, 30, 33, 7],
+    [4, 8, 18, 23, 35, 36, 3],
+    [15, 24, 26, 28, 30, 36, 2],
+    [2, 6, 11, 15, 23, 33, 5],
+]
 
-# גודל היסטוריה
-HISTORY_SIZE = 200
+# -----------------------------
+# 2. שכבת BOOSTER לחיזוק מספרים חמים
+# -----------------------------
+def booster_layer(history):
+    freq = {}
+    for draw in history:
+        main = draw[:6]
+        for num in main:
+            freq[num] = freq.get(num, 0) + 1
 
-# כמות ריצות במונטה-קרלו
-MC_RUNS = 5000
+    # לוקחים את 12 המספרים החזקים ביותר
+    hot = sorted(freq, key=freq.get, reverse=True)[:12]
+    return hot
 
+# -----------------------------
+# 3. שכבת Monte-Carlo
+# -----------------------------
+def monte_carlo(hot_nums, n=5000):
+    weights = {n: 3 if n in hot_nums else 1 for n in range(1, 38)}
+    population = list(weights.keys())
+    weight_list = list(weights.values())
 
-# ------------------------------------------------
-# יצירת היסטוריה רנדומלית לצורך הדמיה
-# בהמשך יוחלף בהיסטוריה אמיתית של לוטו ישראל
-# ------------------------------------------------
-def generate_mock_history(n=HISTORY_SIZE):
-    history = []
-    extra_history = []
-
+    sims = []
     for _ in range(n):
-        main_nums = sorted(random.sample(MAIN_RANGE, 6))
-        extra_num = random.choice(list(EXTRA_RANGE))
+        pick = random.choices(population, weights=weight_list, k=6)
+        sims.append(sorted(pick))
 
-        history.append(main_nums)
-        extra_history.append(extra_num)
+    # בוחרים את ה־6 מספרים שמופיעים הכי הרבה בסימולציות
+    freq = {}
+    for seq in sims:
+        for num in seq:
+            freq[num] = freq.get(num, 0) + 1
 
-    return history, extra_history
+    best = sorted(freq, key=freq.get, reverse=True)[:6]
+    return sorted(best)
 
-
-# ------------------------------------------------
-# לוגיקת מונטה-קרלו מלאה
-# ------------------------------------------------
-def monte_carlo_predict(history):
-    weights = {}
-
-    for run in range(MC_RUNS):
-        ticket = random.sample(MAIN_RANGE, 6)
-
-        score = 0
-        for past_ticket in history:
-            overlap = len(set(ticket) & set(past_ticket))
-            score += overlap ** 2
-
-        ticket_key = tuple(sorted(ticket))
-        weights[ticket_key] = weights.get(ticket_key, 0) + score
-
-    best_ticket = max(weights, key=weights.get)
-    return list(best_ticket)
-
-
-# ------------------------------------------------
-# תחזית מספר נוסף
-# ------------------------------------------------
-def predict_extra_number(extra_history):
-    counts = {}
-
-    for x in extra_history:
-        counts[x] = counts.get(x, 0) + 1
-
-    return max(counts, key=counts.get)
-
-
-# ------------------------------------------------
-# פונקציה ראשית שנקראת ע"י ה־API
-# ------------------------------------------------
+# -----------------------------
+# 4. שכבת FINAL ASSEMBLY
+# -----------------------------
 def generate_forecast():
-    history, extra_hist = generate_mock_history()
+    hot = booster_layer(HIST)
+    main = monte_carlo(hot)
 
-    main_forecast = monte_carlo_predict(history)
-    extra_forecast = predict_extra_number(extra_hist)
+    # מספר נוסף (1–7)
+    extra = random.randint(1, 7)
 
     return {
-        "main": main_forecast,
-        "extra": extra_forecast
+        "main": main,
+        "extra": extra,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
