@@ -1,6 +1,6 @@
 services:
   - name: nasa_ultra_master_service
     env: python
-    startCommand: gunicorn app:app --bind 0.0.0.0:10000 --timeout 120
     buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:10000 --timeout 120
     rootDir: ./
