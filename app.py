@@ -1,43 +1,61 @@
-from flask import Flask, request, jsonify
-from engine import generate_forecast
+from flask import Flask, jsonify, request
+from engine_master import EngineMaster
+import pandas as pd
+import json
 
 app = Flask(__name__)
 
+# ---------------------------------------------------------
+# טעינת היסטוריה (אם קיימת)
+# ---------------------------------------------------------
+
+engine = EngineMaster()
+
+# מנסים לטעון את history_full.json אם קיים
+try:
+    with open("history_full.json", "r", encoding="utf-8") as f:
+        raw = json.load(f)
+        df = pd.DataFrame(raw)
+        engine.load_history(df)
+except:
+    pass
+
 
 # ---------------------------------------------------------
-# Endpoint 1 — בדיקת חיים
+# מסלול סטטוס
 # ---------------------------------------------------------
+
+@app.route("/status", methods=["GET"])
+def status_page():
+    return jsonify(engine.status())
+
+
+# ---------------------------------------------------------
+# מסלול תחזית מלאה
+# ---------------------------------------------------------
+
+@app.route("/forecast", methods=["GET"])
+def get_forecast():
+    result = engine.generate_safe_forecast()
+    return jsonify(result)
+
+
+# ---------------------------------------------------------
+# index
+# ---------------------------------------------------------
+
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "NASA_ULTRA_MASTER_VX ONLINE"}), 200
+    return jsonify({
+        "system": "NASA_ULTRA_MASTER_VX",
+        "status": engine.status(),
+        "endpoints": ["/forecast", "/status"]
+    })
 
 
 # ---------------------------------------------------------
-# Endpoint 2 — יצירת תחזית
+# הרצה מקומית (Railway משתמש ב-server.py)
 # ---------------------------------------------------------
-@app.route("/forecast", methods=["POST", "GET"])
-def forecast():
-
-    # מצב GET — אין היסטוריה → fallback חכם
-    if request.method == "GET":
-        result = generate_forecast([])
-        return jsonify(result), 200
-
-    # מצב POST — קבלת היסטוריה מהמשתמש
-    try:
-        data = request.get_json(force=True, silent=True)
-
-        if data is None:
-            data = []
-
-        result = generate_forecast(data)
-        return jsonify(result), 200
-
-    except Exception:
-        # fallback חזק
-        return jsonify({"main": [1, 2, 3, 4, 5, 6], "extra": 7}), 200
-
 
 if __name__ == "__main__":
-    # להרצה מקומית
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=8000)
